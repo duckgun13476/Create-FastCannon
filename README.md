@@ -1,8 +1,5 @@
 
-![minecraft_title](https://github.com/user-attachments/assets/15b13cc0-ca25-46e1-b8db-f9cd584b8a07)
-
-
-
+<img width="1024" height="290" alt="model" src="https://github.com/user-attachments/assets/fe7fffdd-f077-4021-aac6-f4e5c06b2e2c" />
 
 
 
@@ -11,7 +8,7 @@
 ---
 
 
-令一个简单的机械动力附属，为蓝图炮带来配置修改！
+另一个简单的机械动力附属，为蓝图炮带来配置修改！
 
 1. 允许自定义蓝图炮的刻打印次数，最终效果为机械动力自己的刻延迟 乘以 此打印次数。
 2. 允许自定义蓝图加农炮的禁止打印方块，当填入列表后，对应方块将会像基岩一样无法被蓝图炮破坏！因此默认配置会修复虚空锅炉。
