@@ -30,7 +30,7 @@ idea {
 mixin {
     //add sourceSets.main, "${mod_id}.refmap.json"
 
-    config "${mod_id}.mixins.json"
+    config "createfastschematiccannon.mixins.json"
 }
 
 
@@ -186,43 +186,64 @@ repositories {
 dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
 
+
     //Create
-    modImplementation("curse.maven:create-328085:5838779")
+
+    modImplementation("curse.maven:create-328085:6641603")
+    // modImplementation("curse.maven:create-328085:6641603")
+    //modImplementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    modImplementation("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")
+    //modCompileOnly("dev.engine-room.flywheel:flywheel-forge-api-${flywheel_minecraft_version}:${flywheel_version}")
+    //modRuntimeOnly("dev.engine-room.flywheel:flywheel-forge-${flywheel_minecraft_version}:${flywheel_version}")
     modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    modImplementation("curse.maven:ritchies-projectile-library-1279407:6612420")
+    //rhino
+    //modImplementation("dev.latvian.mods:rhino-forge:${rhino_version}")
+    modImplementation("curse.maven:rhino-416294:6186971")
 
-    //implementation 'com.google.code.gson:gson:2.8.9' // 更新版本
-    //modImplementation(jarJar( group: 'com.moandjiezana.toml', name: 'toml4j', version: '0.7.2'))
-    // Specify the version of Minecraft to use.
-    // Any artifact can be supplied so long as it has a "userdev" classifier artifact and is a compatible patcher artifact.
-    // The "userdev" classifier will be requested and setup by ForgeGradle.
-    // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
-    // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-    //minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    modImplementation("dev.architectury:architectury-forge:${architectury_version}")
 
-    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-common-api:${jei_version}")
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
-    // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
-    modImplementation("curse.maven:observable-509575:5643037")
-    modImplementation("curse.maven:architectury-api-419699:5137938")
-    modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
-    //create
-    //runtimeOnly fg.deobf("curse.maven:create-328085:5838779")
+    //kube js
+    modImplementation("curse.maven:kubejs-238086:5853326")
+    //modImplementation("dev.latvian.mods:kubejs-forge:${kubejs_version}")
 
-    // Example mod dependency using a mod jar from ./libs with a flat dir repository
-    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
-    // The group id is ignored when searching -- in this case, it is "blank"
-    // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
+    modImplementation("curse.maven:create-big-cannons-646668:6696635")
 
-    // For more info:
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    modImplementation("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
 
-    //  if (System.getProperty('idea.sync.active') != 'true') {
-//        annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
-    //}
+    //curios
+    modImplementation("curse.maven:curios-309927:6418456")
+    //modCompileOnly("top.theillusivec4.curios:curios-forge:${curios_version}+${curios_minecraft_version}:api")
+    //modRuntimeOnly("top.theillusivec4.curios:curios-forge:${curios_version}+${curios_minecraft_version}")
+
+
+    modImplementation("curse.maven:jade-324717:${jade_id}")
+    modImplementation("curse.maven:journeymap-32274:5457831")
+
+    if (cc_tweaked_enable.toBoolean()) {
+        compileOnly(fg.deobf('com.blamejared.crafttweaker:CraftTweaker-forge-1.20.1:[VERSION]'))
+        modCompileOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-core-api:${cc_tweaked_version}")
+        modCompileOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-forge-api:${cc_tweaked_version}")
+        modRuntimeOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-forge:${cc_tweaked_version}")
+    }
+    /*if (ct_enabled.toBoolean()) {
+        def minecraftVersion= "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+        def ctDep = "com.blamejared.crafttweaker:CraftTweaker-forge-${minecraft_version}:${ct_version}"
+        def ctCreateDep = "com.blamejared.crafttweaker:CraftTweaker-forge-${minecraft_version}:${ct_version}"
+        modImplementation(ctDep)
+        modImplementation(ctCreateDep)
+
+        modImplementation("com.blamejared.createtweaker:CreateTweaker-${minecraft_version}:${ct_create_version}")
+        annotationProcessor 'com.blamejared.crafttweaker:Crafttweaker_Annotation_Processors:3.0.0.10'
+        annotationProcessor minecraftVersion
+        annotationProcessor ctDep
+        annotationProcessor ctCreateDep
+    }*/
+
+    if (System.getProperty('idea.sync.active') != 'true') {
+        annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+    }
 }
 
 processResources {

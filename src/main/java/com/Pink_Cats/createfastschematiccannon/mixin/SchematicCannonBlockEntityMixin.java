@@ -9,9 +9,11 @@ import com.simibubi.create.content.schematics.cannon.SchematicannonMenu;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.utility.Lang;
+import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CSchematics;
+
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
@@ -36,8 +38,8 @@ import static com.simibubi.create.content.schematics.cannon.SchematicannonBlockE
 
 import java.util.List;
 
-@Mixin(SchematicannonBlockEntity.class)
-public abstract class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements MenuProvider {
+@Mixin(value = SchematicannonBlockEntity.class,remap = false)
+public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements MenuProvider {
 
     @Unique
     public boolean createfastschematiccannon$MissingTick =true;
@@ -173,9 +175,8 @@ public abstract class SchematicCannonBlockEntityMixin extends SmartBlockEntity i
      */
     @Overwrite
     public Component getDisplayName() {
-        return Lang.translateDirect("gui.schematicannon.title");
+        return CreateLang.translateDirect("gui.schematicannon.title");
     }
-
 
     /**
      * @author PinkCats
@@ -242,13 +243,12 @@ public abstract class SchematicCannonBlockEntityMixin extends SmartBlockEntity i
 
     @Inject(method = "tickPrinter", at = @At("HEAD"), cancellable = true)
     protected void injectTickPrinter(CallbackInfo info) {
-        //System.out.println("tick printer tick"+createfastschematiccannon$MissingTick);
-        //System.out.println("tick printer count"+createfastschematiccannon$MissingCount);
 
         ItemStack blueprint = inventory.getStackInSlot(0);
         blockSkipped = false;
 
-        if (blueprint.isEmpty() && !statusMsg.equals("idle") && inventory.getStackInSlot(1).isEmpty()) {
+        if (blueprint.isEmpty() && !statusMsg.equals("idle") && inventory.getStackInSlot(1)
+                .isEmpty()) {
             state = SchematicannonBlockEntity.State.STOPPED;
             statusMsg = "idle";
             sendUpdate = true;
