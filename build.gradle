@@ -28,7 +28,7 @@ idea {
 
 
 mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
+    //add sourceSets.main, "${mod_id}.refmap.json"
 
     config "${mod_id}.mixins.json"
 }
@@ -246,12 +246,32 @@ jar {
 
     }
     manifest.attributes([
-            "MixinConfigs": "createentitycontroller.mixins.json",
+            "MixinConfigs": "createfastschematiccannon.mixins.json",
             "Git-Hash"    :  gitHash
     ])
 
 }
 
+tasks.register('printReobfJarPath') {
+    doLast {
+        println "Reobfuscated JAR file path: ${reobfJar.archiveFile.get().asFile.absolutePath}"
+        def versionParts = mod_version.split("-")
+        println "version = \"$minecraft_version-$mod_version\"\n" +
+                "    displayName = \"${mod_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}\""
+        def propertiesFile = file('api.properties')
+        if (propertiesFile.exists()) {
+            def properties = new Properties()
+            properties.load(new FileInputStream(propertiesFile))
+            def cfToken = properties.getProperty("CF_TOKEN")
+            def modrinthToken = properties.getProperty("MODRINTH_TOKEN")
+
+            println "CF_TOKEN: $cfToken"
+            println "MODRINTH_TOKEN: $modrinthToken"
+        } else {
+            println "api.properties not exist"
+        }
+    }
+}
 
 
 publishMods {
@@ -272,7 +292,6 @@ publishMods {
             clientRequired = true
             serverRequired = true
             requires("create")
-            optional("jei", "kubejs","kubejs-create","crafttweaker")
         }
     }
     var mrToken = System.getenv("MODRINTH_TOKEN")
@@ -282,7 +301,6 @@ publishMods {
             projectId = "${modrinth_id}"
             minecraftVersions.add(minecraft_version)
             requires("create")
-            optional("jei", "kubejs","kubejs-create","crafttweaker","createtweaker")
         }
     }
 }
