@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "priority": 1200 ,
+  "package": "com.Pink_Cats.createfastschematiccannon.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "createfastschematiccannon.refmap.json",
+  "mixins": [
+    "SchematicCannonBlockEntityMixin",
+    "SmartBlockEntityMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
