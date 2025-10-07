@@ -1,23 +1,22 @@
 package com.Pink_Cats.createfastschematiccannon;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.registries.ForgeRegistries;
-
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 // An example config class. This is not required, but it's a good idea to have one to keep your config organized.
 // Demonstrates how to use Forge's config APIs
-@Mod.EventBusSubscriber(modid = Createfastschematiccannon.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = Createfastschematiccannon.MODID, bus = EventBusSubscriber.Bus.MOD)
 public class Config {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_CFC = BUILDER
+    private static final ModConfigSpec.BooleanValue ENABLE_CFC = BUILDER
             .comment("Why does this configuration file have two languages: This is what my Chinese friend wanted, so I did it this way, haha.")
             .comment("_________________________________________________________________________________________ ")
             .comment("请注意： 在某些服务器核心内(Mohist/Arclight)，这个配置文件的修改必须要重启整个服务器才能生效！")
@@ -31,7 +30,7 @@ public class Config {
 
 
 
-    public  static final ForgeConfigSpec.IntValue SCHEMATIC_SPEED_UP_PER_TICK = BUILDER
+    public  static final ModConfigSpec.IntValue SCHEMATIC_SPEED_UP_PER_TICK = BUILDER
             .comment("__________________________________________________________________________________________")
             .comment("")
             .comment("This variable represents the number of prints the blueprint cannon performs per tick, which is multiplicative with the print delay within the blueprint cannon.")
@@ -45,7 +44,7 @@ public class Config {
 
             .defineInRange("SpeedupPerTick", 20, 1,400 );
 
-    public static final ForgeConfigSpec.IntValue LAZY_TICK = BUILDER
+    public static final ModConfigSpec.IntValue LAZY_TICK = BUILDER
             .comment("__________________________________________________________________________________________")
             .comment("")
             .comment("This is an experimental parameter used to reduce the game ticks of the blueprint cannon.")
@@ -59,7 +58,7 @@ public class Config {
             .defineInRange("lazyTick", 5, 1,200 );
 
 
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> BLACKS_STRING =
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> BLACKS_STRING =
             BUILDER.comment("--------------------------------------------------------------------------")
                     .comment("A list of blocks can't be clear or broke by cannon.")
                     .comment("列表内的方块不会被蓝图炮摧毁，这可以阻止蓝图炮无尽锅炉bug")
@@ -67,7 +66,7 @@ public class Config {
                             "create:blaze_burner"
                     ), Config::validateItemName);
 
-    private static final ForgeConfigSpec.BooleanValue DEBUG = BUILDER
+    private static final ModConfigSpec.BooleanValue DEBUG = BUILDER
             .comment("Enable forbid message or not")
             .comment("当蓝图炮尝试破坏被禁止的方块时是否在控制台通知")
             .define("debug", true);
@@ -76,7 +75,7 @@ public class Config {
 
 
 
-    static final ForgeConfigSpec SPEC = BUILDER.build();
+    static final ModConfigSpec SPEC = BUILDER.build();
 
     public static boolean enable_CFC;
     public static int lazyTick;
@@ -85,9 +84,12 @@ public class Config {
     public static boolean enable_debug;
 
 
+
     private static boolean validateItemName(final Object obj) {
-        return obj instanceof final String itemName && ForgeRegistries.BLOCKS.containsKey(new ResourceLocation(itemName));
+
+        return obj instanceof String itemName && BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse(itemName));
     }
+
 
 
     @SubscribeEvent
