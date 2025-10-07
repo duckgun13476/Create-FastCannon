@@ -1,0 +1,40 @@
+modLoader = "javafml" #mandatory
+loaderVersion = "${loader_version_range}" #mandatory version by Forge. See our download page for lists of versions.
+license = "MIT"
+
+
+[[mods]] #mandatory
+    modId = "${mod_id}" #mandatory
+    version = "${mod_version}" #mandatory
+    displayName = "${mod_name}" #mandatory
+    authors = "${mod_authors}" #optional
+    description = '''${mod_description}'''
+    logoFile= "icon.png"
+
+[[mixins]]
+    config = "${mod_id}.mixins.json"
+
+
+
+[[dependencies."${mod_id}"]] #optional
+    modId = "neoforge" #mandatory
+    type = "required" #mandatory
+    versionRange = "${neo_version_range}" #mandatory
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+    modId = "minecraft"
+    type = "required"
+    versionRange = "${minecraft_version_range}"
+    ordering = "NONE"
+    side = "BOTH"
+
+
+[[dependencies."${mod_id}"]]
+    modId="create"
+    type = "required"
+    versionRange="[6.0.1,)"
+    ordering="NONE"
+    side="BOTH"
+
