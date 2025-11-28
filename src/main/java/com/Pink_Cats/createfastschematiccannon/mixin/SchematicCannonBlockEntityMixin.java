@@ -244,16 +244,21 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     protected void initializePrinter(ItemStack blueprint) {}
 
 
-    private boolean IsNotLoad = false;
+    @Unique
+    private boolean createfastschematiccannon$IsNotLoad = false;
 
     @Inject(method = "initializePrinter", at = @At("HEAD"), cancellable = true)
     protected void initializePrinterInject(ItemStack blueprint, CallbackInfo ci) {
 
+        //System.out.println(createfastschematiccannon$IsNotLoad);
+
+
         if (blueprint.isEmpty())
-            IsNotLoad = false;
+            createfastschematiccannon$IsNotLoad = false;
 
 
-        if (IsNotLoad) {
+        if (createfastschematiccannon$IsNotLoad) {
+            statusMsg = "targetOutsideRange";
             ci.cancel();
             return;
         }
@@ -303,7 +308,7 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
                 .closerThan(getBlockPos(), MAX_ANCHOR_DISTANCE)) {
             state = SchematicannonBlockEntity.State.STOPPED;
             statusMsg = "targetOutsideRange";
-            IsNotLoad = true;
+            createfastschematiccannon$IsNotLoad = true;
             printer.resetSchematic();
             sendUpdate = true;
             ci.cancel();
@@ -491,6 +496,6 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     }
 
     public boolean isNotLoad() {
-        return IsNotLoad;
+        return createfastschematiccannon$IsNotLoad;
     }
 }
