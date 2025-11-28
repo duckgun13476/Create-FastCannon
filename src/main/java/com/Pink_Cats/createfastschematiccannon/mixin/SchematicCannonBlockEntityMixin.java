@@ -2,6 +2,7 @@ package com.Pink_Cats.createfastschematiccannon.mixin;
 
 import com.Pink_Cats.createfastschematiccannon.Config;
 import com.Pink_Cats.createfastschematiccannon.Createfastschematiccannon;
+import com.simibubi.create.AllItems;
 import com.simibubi.create.content.schematics.SchematicPrinter;
 import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import com.simibubi.create.content.schematics.cannon.SchematicannonInventory;
@@ -34,6 +35,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity.MAX_ANCHOR_DISTANCE;
 import static com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity.NEIGHBOUR_CHECKING;
 
 import java.util.List;
@@ -199,9 +201,6 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     protected void resetPrinter() {}
 
     @Shadow
-    protected void initializePrinter(ItemStack blueprint) {}
-
-    @Shadow
     public boolean positionNotLoaded;
 
     @Shadow
@@ -239,6 +238,93 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
 
     @Shadow
     public boolean skipMissing;
+
+
+    @Shadow
+    protected void initializePrinter(ItemStack blueprint) {}
+
+
+    private boolean IsNotLoad = false;
+
+    @Inject(method = "initializePrinter", at = @At("HEAD"), cancellable = true)
+    protected void initializePrinterInject(ItemStack blueprint, CallbackInfo ci) {
+
+        if (blueprint.isEmpty())
+            IsNotLoad = false;
+
+
+        if (IsNotLoad) {
+            ci.cancel();
+            return;
+        }
+
+        if (!blueprint.hasTag()) {
+            state = SchematicannonBlockEntity.State.STOPPED;
+            statusMsg = "schematicInvalid";
+            sendUpdate = true;
+            ci.cancel();
+            return;
+        }
+
+        if (!blueprint.getTag()
+                .getBoolean("Deployed")) {
+            state = SchematicannonBlockEntity.State.STOPPED;
+            statusMsg = "schematicNotPlaced";
+            sendUpdate = true;
+            ci.cancel();
+            return;
+        }
+
+        // Load blocks into reader
+        printer.loadSchematic(blueprint, level, true);
+        if (printer.isErrored()) {
+            state = SchematicannonBlockEntity.State.STOPPED;
+            statusMsg = "schematicErrored";
+            inventory.setStackInSlot(0, ItemStack.EMPTY);
+            inventory.setStackInSlot(1, new ItemStack(AllItems.EMPTY_SCHEMATIC.get()));
+            printer.resetSchematic();
+            sendUpdate = true;
+            ci.cancel();
+            return;
+        }
+
+        if (printer.isWorldEmpty()) {
+            state = SchematicannonBlockEntity.State.STOPPED;
+            statusMsg = "schematicExpired";
+            inventory.setStackInSlot(0, ItemStack.EMPTY);
+            inventory.setStackInSlot(1, new ItemStack(AllItems.EMPTY_SCHEMATIC.get()));
+            printer.resetSchematic();
+            sendUpdate = true;
+            ci.cancel();
+            return;
+        }
+
+        if (!printer.getAnchor()
+                .closerThan(getBlockPos(), MAX_ANCHOR_DISTANCE)) {
+            state = SchematicannonBlockEntity.State.STOPPED;
+            statusMsg = "targetOutsideRange";
+            IsNotLoad = true;
+            printer.resetSchematic();
+            sendUpdate = true;
+            ci.cancel();
+            return;
+        }
+
+        state = SchematicannonBlockEntity.State.PAUSED;
+        statusMsg = "ready";
+        updateChecklist();
+        sendUpdate = true;
+        blocksToPlace += blocksPlaced;
+        ci.cancel();
+    }
+
+
+
+    @Shadow
+    public void updateChecklist() {}
+
+
+
 
 
     @Inject(method = "tickPrinter", at = @At("HEAD"), cancellable = true)
@@ -402,5 +488,9 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
         remainingFuel -= 1;
         sendUpdate = true;
         missingItem = null;
+    }
+
+    public boolean isNotLoad() {
+        return IsNotLoad;
     }
 }
