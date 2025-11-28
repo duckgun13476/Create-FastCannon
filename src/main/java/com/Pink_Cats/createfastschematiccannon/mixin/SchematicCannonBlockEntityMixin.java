@@ -2,6 +2,7 @@ package com.Pink_Cats.createfastschematiccannon.mixin;
 
 import com.Pink_Cats.createfastschematiccannon.Config;
 import com.Pink_Cats.createfastschematiccannon.Createfastschematiccannon;
+import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.schematics.SchematicPrinter;
 import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
@@ -263,7 +264,7 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
             return;
         }
 
-        if (!blueprint.hasTag()) {
+        if (!blueprint.has(AllDataComponents.SCHEMATIC_ANCHOR)) {
             state = SchematicannonBlockEntity.State.STOPPED;
             statusMsg = "schematicInvalid";
             sendUpdate = true;
@@ -271,8 +272,7 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
             return;
         }
 
-        if (!blueprint.getTag()
-                .getBoolean("Deployed")) {
+        if (!blueprint.getOrDefault(AllDataComponents.SCHEMATIC_DEPLOYED, false)) {
             state = SchematicannonBlockEntity.State.STOPPED;
             statusMsg = "schematicNotPlaced";
             sendUpdate = true;
@@ -336,6 +336,9 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     protected void injectTickPrinter(CallbackInfo info) {
 
         ItemStack blueprint = inventory.getStackInSlot(0);
+        if (blueprint.isEmpty())
+            createfastschematiccannon$IsNotLoad = false;
+
         blockSkipped = false;
 
         if (blueprint.isEmpty() && !statusMsg.equals("idle") && inventory.getStackInSlot(1)
