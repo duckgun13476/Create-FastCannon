@@ -208,7 +208,7 @@ tasks.register('PublishInfo') {
 
 def mod_ids = "createfastschematiccannon"
 jar {
-    archiveFileName = "${mod_id}-${mod_version}-neoforge-${minecraft_version}.jar"
+    archiveFileName = "${package_name}-${mod_version}-${minecraft_version}.jar"
     from('LICENSE.txt') {
         rename { "${it}_${mod_ids}" }
 
@@ -239,7 +239,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     apiToken = cfToken
     def versionParts = mod_version.split("-")
 
-    def mainFile = upload(curseforge_id, new File("./build/libs/${mod_id}-${mod_version}-neoforge-${minecraft_version}.jar"))
+    def mainFile = upload(curseforge_id, new File("./build/libs/${package_name}-${mod_version}-${minecraft_version}.jar"))
     mainFile.changelog = new File("./update/${versionParts[0]}-changelog.md").text.split("\n\n\n")[0]
     mainFile.addEnvironment("Client", "Server")
     mainFile.addGameVersion("${minecraft_version}")
@@ -247,7 +247,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     mainFile.addRequirement("create")
 
 
-    mainFile.displayName = "${display_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}_neoforge"
+    mainFile.displayName = "${display_name}_v${versionParts[0]}_neoforge"
 
     mainFile.addOptional(
             "jei",
@@ -270,7 +270,7 @@ publishMods {
     changelog = rootProject.file("./update/${versionParts[0]}-changelog.md").text
     type = STABLE
     version = "$minecraft_version-$mod_version"
-    displayName = "${display_name}_v${versionParts[0]}_for_Create_v${versionParts[1]}_neoforge"
+    displayName = "${display_name}_v${versionParts[0]}_neoforge"
 
     modLoaders.add("neoforge")
 
