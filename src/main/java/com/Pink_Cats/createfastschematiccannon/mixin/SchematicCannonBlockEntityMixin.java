@@ -21,10 +21,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -328,98 +330,49 @@ public abstract class SchematicCannonBlockEntityMixin extends SmartBlockEntity i
     public void updateChecklist() {}
 
 
+    @Inject(
+            method = "tickPrinter",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/simibubi/create/content/schematics/cannon/SchematicannonBlockEntity;refillFuelIfPossible()V",
+                    shift =  At.Shift.AFTER
+            ),
+            remap = false
+    )
+    protected void activateTickDelay(CallbackInfo info) {
+        if (remainingFuel <= 0) {
+            createfastschematiccannon$MissingTick = true;
+        }
+    }
 
 
 
-    @Inject(method = "tickPrinter", at = @At("HEAD"), cancellable = true)
+    @Inject(
+            method = "tickPrinter",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lcom/simibubi/create/content/schematics/cannon/SchematicannonBlockEntity;statusMsg:Ljava/lang/String;",
+                    shift =  At.Shift.AFTER,
+                    opcode = Opcodes.PUTFIELD,
+                    ordinal = 5
+            ),
+            remap = false
+    )
+    protected void injectTickPrinterFuelCheck(CallbackInfo info) {
+        createfastschematiccannon$MissingTick = true;
+    }
+
+
+
+    @Inject(
+            method = "tickPrinter",
+            at = @At(
+                    value = "INVOKE_ASSIGN",
+                    target = "Lcom/simibubi/create/content/schematics/SchematicPrinter;getCurrentRequirement()Lcom/simibubi/create/content/schematics/requirement/ItemRequirement;"
+            ),
+            remap = false,
+            cancellable = true)
     protected void injectTickPrinter(CallbackInfo info) {
-        //System.out.println("tick printer tick"+createfastschematiccannon$MissingTick);
-        //System.out.println("tick printer count"+createfastschematiccannon$MissingCount);
-
-        ItemStack blueprint = inventory.getStackInSlot(0);
-        blockSkipped = false;
-
-        if (blueprint.isEmpty() && !statusMsg.equals("idle") && inventory.getStackInSlot(1).isEmpty()) {
-            state = SchematicannonBlockEntity.State.STOPPED;
-            statusMsg = "idle";
-            sendUpdate = true;
-            info.cancel(); // 取消原始方法的执行
-            return;
-        }
-
-        // Skip if not Active
-        if (state == SchematicannonBlockEntity.State.STOPPED) {
-            if (printer.isLoaded()) {
-                resetPrinter();
-            }
-            info.cancel(); // 取消原始方法的执行
-            return;
-        }
-
-        if (state == SchematicannonBlockEntity.State.PAUSED && !positionNotLoaded && missingItem == null && remainingFuel > 0) {
-            info.cancel(); // 取消原始方法的执行
-            return;
-        }
-
-        // Initialize Printer
-        if (!printer.isLoaded()) {
-            initializePrinter(blueprint);
-            info.cancel(); // 取消原始方法的执行
-            return;
-        }
-
-        // Cooldown from last shot
-        if (printerCooldown > 0) {
-            printerCooldown--;
-            info.cancel(); // 取消原始方法的执行
-            return;
-        }
-
-        // Check Fuel
-        if (remainingFuel <= 0 && !hasCreativeCrate) {
-            refillFuelIfPossible();
-            if (remainingFuel <= 0) {
-                state = SchematicannonBlockEntity.State.PAUSED;
-                statusMsg = "noGunpowder";
-                createfastschematiccannon$MissingTick = true;
-
-                sendUpdate = true;
-                info.cancel(); // 取消原始方法的执行
-                return;
-            }
-        }
-
-        if (hasCreativeCrate) {
-            remainingFuel = 0;
-            if (missingItem != null) {
-                missingItem = null;
-                state = SchematicannonBlockEntity.State.RUNNING;
-            }
-        }
-
-        // Update Target
-        if (missingItem == null && !positionNotLoaded) {
-            if (!printer.advanceCurrentPos()) {
-                finishedPrinting();
-                info.cancel(); // 取消原始方法的执行
-                return;
-            }
-            sendUpdate = true;
-        }
-
-        // Check block
-        if (!getLevel().isLoaded(printer.getCurrentTarget())) {
-            positionNotLoaded = true;
-            statusMsg = "targetNotLoaded";
-            state = SchematicannonBlockEntity.State.PAUSED;
-            info.cancel(); // 取消原始方法的执行
-            return;
-        } else {
-            if (positionNotLoaded) {
-                positionNotLoaded = false;
-                state = SchematicannonBlockEntity.State.RUNNING;
-            }
-        }
 
         // Get item requirement
         ItemRequirement requirement = printer.getCurrentRequirement();
@@ -481,19 +434,23 @@ public abstract class SchematicCannonBlockEntityMixin extends SmartBlockEntity i
                         }
                     }
 
-            statusMsg = blockState.getBlock() != Blocks.AIR ? "placing" : "clearing";
-            launchBlockOrBelt(target, icon, blockState, blockEntity);
-        }, (target, entity) -> {
-            // Launch entity
-            statusMsg = "placing";
-            launchEntity(target, icon, entity);
-        });
+                    statusMsg = blockState.getBlock() != Blocks.AIR ? "placing" : "clearing";
+                    launchBlockOrBelt(target, icon, blockState, blockEntity);
+                }, (target, entity) -> {
+                    // Launch entity
+                    statusMsg = "placing";
+                    launchEntity(target, icon, entity);
+                });
 
         printerCooldown = config().schematicannonDelay.get();
         remainingFuel -= 1;
         sendUpdate = true;
         missingItem = null;
+        info.cancel();
     }
+
+
+
 
     public boolean isNotLoad() {
         return createfastschematiccannon$IsNotLoad;
