@@ -92,11 +92,21 @@ public class Config {
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
+        LoadPara();
+
+    }
+
+    @SubscribeEvent
+    static void onReload(final ModConfigEvent event) {
+        LoadPara();
+
+    }
+
+    private static void LoadPara() {
         enable_CFC = ENABLE_CFC.get();
         SchematicSpeedupPerTick = SCHEMATIC_SPEED_UP_PER_TICK.get();
         lazyTick = LAZY_TICK.get();
         blocks_unbreak = new HashSet<>(BLACKS_STRING.get());
         enable_debug = DEBUG.get();
-
     }
 }
