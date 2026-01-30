@@ -72,6 +72,10 @@ public class Config {
             .define("debug", true);
 
 
+    private static final ForgeConfigSpec.BooleanValue ALLOW_GUNPOWDER_BLOCK = BUILDER
+            .comment("Whether allow gunpowder blocks to refuel(Experiment Warn:This may cause lag for cannon)")
+            .comment("是否允许使用其他模组的火药块(这可能导致蓝图炮占用提升)")
+            .define("gunpowder_blocks_compat", false);
 
 
 
@@ -82,6 +86,7 @@ public class Config {
     public static int SchematicSpeedupPerTick;
     public static Set<String> blocks_unbreak; // 定义为 Set<String>
     public static boolean enable_debug;
+    public static boolean enable_gunpowder_blocks_compat;
 
 
 
@@ -110,5 +115,6 @@ public class Config {
         lazyTick = LAZY_TICK.get();
         blocks_unbreak = new HashSet<>(BLACKS_STRING.get());
         enable_debug = DEBUG.get();
+        enable_gunpowder_blocks_compat = ALLOW_GUNPOWDER_BLOCK.get();
     }
 }

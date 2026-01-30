@@ -8,27 +8,23 @@ import com.simibubi.create.content.schematics.SchematicPrinter;
 import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import com.simibubi.create.content.schematics.cannon.SchematicannonInventory;
 import com.simibubi.create.content.schematics.cannon.SchematicannonMenu;
-import com.simibubi.create.content.schematics.requirement.ItemRequirement;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
-import com.simibubi.create.infrastructure.config.AllConfigs;
-import com.simibubi.create.infrastructure.config.CSchematics;
-
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.wrapper.EmptyHandler;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -36,11 +32,15 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.Pink_Cats.createfastschematiccannon.Config.enable_gunpowder_blocks_compat;
 import static com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity.MAX_ANCHOR_DISTANCE;
 import static com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity.NEIGHBOUR_CHECKING;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Mixin(value = SchematicannonBlockEntity.class,remap = false)
@@ -202,50 +202,10 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
 
 
     @Shadow
-    protected void resetPrinter() {}
-
-    @Shadow
-    public boolean positionNotLoaded;
-
-    @Shadow
-    public ItemStack missingItem;
-
-    @Shadow
-    private int printerCooldown;
-
-    @Shadow
     public int remainingFuel;
 
     @Shadow
     public boolean hasCreativeCrate;
-
-    @Shadow
-    protected void launchEntity(BlockPos target, ItemStack stack, Entity entity) {}
-
-    @Shadow
-    public CSchematics config() {
-        return AllConfigs.server().schematics;
-    }
-
-    @Shadow
-    public void finishedPrinting() {}
-
-    @Shadow
-    protected void launchBlockOrBelt(BlockPos target, ItemStack icon, BlockState blockState, BlockEntity blockEntity) {}
-
-    @Shadow
-    protected boolean shouldPlace(BlockPos pos, BlockState state, BlockEntity be, BlockState toReplace,
-                                  BlockState toReplaceOther, boolean isNormalCube) {return false;}
-
-    @Shadow
-    protected boolean grabItemsFromAttachedInventories(ItemRequirement.StackRequirement required, boolean simulate) {return false;}
-
-    @Shadow
-    public boolean skipMissing;
-
-
-    @Shadow
-    protected void initializePrinter(ItemStack blueprint) {}
 
 
     @Unique
@@ -369,92 +329,148 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     @Inject(
             method = "tickPrinter",
             at = @At(
-                    value = "INVOKE_ASSIGN",
-                    target = "Lcom/simibubi/create/content/schematics/SchematicPrinter;getCurrentRequirement()Lcom/simibubi/create/content/schematics/requirement/ItemRequirement;"
+                    value = "INVOKE",
+                    shift = At.Shift.AFTER,
+                    target = "Lcom/simibubi/create/content/schematics/SchematicPrinter;shouldPlaceCurrent(Lnet/minecraft/world/level/Level;Lcom/simibubi/create/content/schematics/SchematicPrinter$PlacementPredicate;)Z"
             ),
-            remap = false,
-            cancellable = true)
+            remap = false
+    )
     protected void injectTickPrinter(CallbackInfo info) {
+    }
 
-        // Get item requirement
-        ItemRequirement requirement = printer.getCurrentRequirement();
-        if (requirement.isInvalid() || !printer.shouldPlaceCurrent(level, this::shouldPlace)) {
-            sendUpdate = !statusMsg.equals("searching");
-            statusMsg = "searching";
-            blockSkipped = true;
-            info.cancel();
-            return;
-        }
+    @Redirect(
+            method = "tickPrinter",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/simibubi/create/content/schematics/SchematicPrinter;handleCurrentTarget(Lcom/simibubi/create/content/schematics/SchematicPrinter$BlockTargetHandler;Lcom/simibubi/create/content/schematics/SchematicPrinter$EntityTargetHandler;)V"
+            ),
+            remap = false)
+    protected void redirectHandleCurrentTarget(
+            SchematicPrinter instance,
+            SchematicPrinter.BlockTargetHandler originalBlockHandler,
+            SchematicPrinter.EntityTargetHandler originalEntityHandler) {
 
-        // Find item
-        List<ItemRequirement.StackRequirement> requiredItems = requirement.getRequiredItems();
-        if (!requirement.isEmpty()) {
-            for (ItemRequirement.StackRequirement required : requiredItems) {
-                if (!grabItemsFromAttachedInventories(required, true)) {
-                    if (skipMissing) {
-                        statusMsg = "skipping";
-                        blockSkipped = true;
-                        if (missingItem != null) {
-                            missingItem = null;
-                            state = SchematicannonBlockEntity.State.RUNNING;
-                        }
-                        info.cancel();
-                        return;
+        SchematicPrinter.BlockTargetHandler wrappedBlockHandler = (target, blockState, blockEntity) -> {
+
+            if (level != null) {
+                BlockState TargetState = level.getBlockState(target);
+                String targetstring = TargetState.getBlock()
+                        .toString().replaceAll("Block\\{(.*?)\\}", "$1");
+                boolean IsUnBreakable = Config.blocks_unbreak.stream().anyMatch(targetstring::equals);
+                if (IsUnBreakable) {
+                    if (Config.enable_debug) {
+                        Createfastschematiccannon.LOGGER.info(
+                                "Block [{}] in [{},{},{}] is forbid by CFC",
+                                targetstring, target.getX(), target.getY(), target.getZ()
+                        );
                     }
-
-                    missingItem = required.stack;
-                    state = SchematicannonBlockEntity.State.PAUSED;
-                    statusMsg = "missingBlock";
-                    createfastschematiccannon$MissingTick = true;
-                    info.cancel();
+                    this.blockSkipped = true;
+                    this.statusMsg = "searching";
                     return;
                 }
             }
 
-            for (ItemRequirement.StackRequirement required : requiredItems) {
-                grabItemsFromAttachedInventories(required, false);
-            }
-        }
+            originalBlockHandler.handle(target, blockState, blockEntity);
+        };
 
-        state = SchematicannonBlockEntity.State.RUNNING;
-        ItemStack icon = requirement.isEmpty() || requiredItems.isEmpty() ? ItemStack.EMPTY : requiredItems.get(0).stack;
-        printer.handleCurrentTarget(
-                (target, blockState, blockEntity) -> {
-
-
-                    if (level != null) {
-                        BlockState targetstate = level.getBlockState(target);
-                        String targetstring = targetstate.getBlock().
-                                toString().replaceAll("Block\\{(.*?)\\}", "$1");
-                        boolean IsUnBreakable = Config.blocks_unbreak.stream().anyMatch(targetstring::equals);
-                        if (IsUnBreakable) {
-                            if (Config.enable_debug){
-                                Createfastschematiccannon.LOGGER.info("Block [{}] in [{},{},{}] is forbid by CFC",targetstring,target.getX(),target.getY(),target.getZ());
-                            }
-                            info.cancel();
-                            return;
-                        }
-                    }
-
-                    statusMsg = blockState.getBlock() != Blocks.AIR ? "placing" : "clearing";
-                    launchBlockOrBelt(target, icon, blockState, blockEntity);
-                }, (target, entity) -> {
-                    // Launch entity
-                    statusMsg = "placing";
-                    launchEntity(target, icon, entity);
-                });
-
-        printerCooldown = config().schematicannonDelay.get();
-        remainingFuel -= 1;
-        sendUpdate = true;
-        missingItem = null;
-        info.cancel();
+        // Vanilla handleCurrentTarget method
+        instance.handleCurrentTarget(wrappedBlockHandler, originalEntityHandler);
     }
 
 
 
+    @Shadow
+    public int getShotsPerGunpowder() {return 0;}
 
-    public boolean isNotLoad() {
-        return createfastschematiccannon$IsNotLoad;
+    @Shadow
+    public LinkedHashSet<LazyOptional<IItemHandler>> attachedInventories;
+
+    @Unique
+    private static final List<String> createfastschematiccannon$charge;
+
+    static {
+        createfastschematiccannon$charge = new ArrayList<>();
+        createfastschematiccannon$charge.add("block.cratedelight.gunpowder_bag");
+    }
+
+    @Inject(method = "refillFuelIfPossible" ,at=@At("HEAD" ),cancellable = true,remap = false)
+    protected void refillFuelIfPossible(CallbackInfo ci) {
+
+        if (!enable_gunpowder_blocks_compat)
+            return;
+
+        if (hasCreativeCrate) {
+            ci.cancel();
+            return;
+        }
+        if (remainingFuel > getShotsPerGunpowder()) {
+            remainingFuel = getShotsPerGunpowder();
+            sendUpdate = true;
+            ci.cancel();
+            return;
+        }
+
+        if (remainingFuel > 0) {
+            ci.cancel();
+            return;
+        }
+
+        if (!inventory.getStackInSlot(4)
+                .isEmpty())
+            inventory.getStackInSlot(4)
+                    .shrink(1);
+        else {
+            boolean externalGunpowderFound = false;
+            for (LazyOptional<IItemHandler> cap : attachedInventories) {
+                IItemHandler itemHandler = cap.orElse(EmptyHandler.INSTANCE);
+                ItemStack cache = new ItemStack(Items.GUNPOWDER,0);
+                boolean HasCharged = false;
+                for (int i = 0; i < itemHandler.getSlots(); i++) {
+                    ItemStack stack = itemHandler.getStackInSlot(i);
+                    if (stack.getCount() > 0){
+                        String id = stack.getItem().getDescriptionId();
+                        if (createfastschematiccannon$charge.contains(id)){
+                            ItemStack extracted = itemHandler.extractItem(i, 1, false);
+                            if (!extracted.isEmpty()) {
+                                cache.setCount(9);
+                                HasCharged = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (HasCharged) {
+                    ItemStack slot4Stack = inventory.getStackInSlot(4);
+                    if (slot4Stack.isEmpty()) {
+                        slot4Stack = cache.copy();
+                        inventory.setStackInSlot(4, slot4Stack);
+                    } else {
+                        slot4Stack.grow(cache.getCount());
+                        inventory.setStackInSlot(4, slot4Stack);
+                    }
+                }
+
+
+                if (ItemHelper.extract(itemHandler, stack -> inventory.isItemValid(4, stack), 1, false)
+                        .isEmpty())
+                    continue;
+                externalGunpowderFound = true;
+                break;
+            }
+            if (!externalGunpowderFound) {
+                ci.cancel();
+                return;
+            }
+        }
+
+        remainingFuel += getShotsPerGunpowder();
+        if (statusMsg.equals("noGunpowder")) {
+            if (blocksPlaced > 0)
+                state = SchematicannonBlockEntity.State.RUNNING;
+            statusMsg = "ready";
+        }
+        sendUpdate = true;
+        ci.cancel();
     }
 }
