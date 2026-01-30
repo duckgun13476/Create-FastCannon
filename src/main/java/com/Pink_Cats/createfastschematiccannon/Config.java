@@ -72,7 +72,7 @@ public class Config {
             .define("debug", true);
 
 
-    private static final ForgeConfigSpec.BooleanValue ALLOW_GUNPOWDER_BLOCK = BUILDER
+    private static final ModConfigSpec.BooleanValue ALLOW_GUNPOWDER_BLOCK = BUILDER
             .comment("Whether allow gunpowder blocks to refuel(Experiment Warn:This may cause lag for cannon)")
             .comment("是否允许使用其他模组的火药块(这可能导致蓝图炮占用提升)")
             .define("gunpowder_blocks_compat", false);

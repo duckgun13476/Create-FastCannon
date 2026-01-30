@@ -22,9 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.wrapper.EmptyHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -383,7 +381,7 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     public int getShotsPerGunpowder() {return 0;}
 
     @Shadow
-    public LinkedHashSet<LazyOptional<IItemHandler>> attachedInventories;
+    public LinkedHashSet<IItemHandler> attachedInventories;
 
     @Unique
     private static final List<String> createfastschematiccannon$charge;
@@ -421,8 +419,8 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
                     .shrink(1);
         else {
             boolean externalGunpowderFound = false;
-            for (LazyOptional<IItemHandler> cap : attachedInventories) {
-                IItemHandler itemHandler = cap.orElse(EmptyHandler.INSTANCE);
+            for (IItemHandler cap : attachedInventories) {
+                IItemHandler itemHandler = cap;
                 ItemStack cache = new ItemStack(Items.GUNPOWDER,0);
                 boolean HasCharged = false;
                 for (int i = 0; i < itemHandler.getSlots(); i++) {
