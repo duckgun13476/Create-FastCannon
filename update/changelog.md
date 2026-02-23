@@ -1,3 +1,5 @@
+#### V1.4.1
+1. Fix historic problem from old code.
 
 #### V1.3
 1. fix a refresh problem.
@@ -8,4 +10,4 @@
 
 #### V1.1
 1. Add a delay tick for fix cannon delay from Create itself.
-2. Add a blacklist  for prevent Create:blaze_burner  bug.
+2. Add a blacklist for prevented Create:blaze_burner bug.
