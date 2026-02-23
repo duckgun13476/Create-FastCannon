@@ -13,7 +13,7 @@ import java.util.Set;
 
 // An example config class. This is not required, but it's a good idea to have one to keep your config organized.
 // Demonstrates how to use Forge's config APIs
-@Mod.EventBusSubscriber(modid = Createfastschematiccannon.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod(Createfastschematiccannon.MODID)
 public class Config {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
@@ -63,7 +63,7 @@ public class Config {
             BUILDER.comment("--------------------------------------------------------------------------")
                     .comment("A list of blocks can't be clear or broke by cannon.")
                     .comment("列表内的方块不会被蓝图炮摧毁，这可以阻止蓝图炮无尽锅炉bug")
-                    .defineListAllowEmpty("blocks_unbreak", List.of(
+                    .defineList("blocks_unbreak", List.of(
                             "create:blaze_burner"
                     ), Config::validateItemName);
 
