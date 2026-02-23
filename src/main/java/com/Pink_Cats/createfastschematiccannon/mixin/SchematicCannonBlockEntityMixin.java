@@ -42,66 +42,31 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 @Mixin(value = SchematicannonBlockEntity.class,remap = false)
-public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements MenuProvider {
-
-    @Unique
-    public boolean createfastschematiccannon$MissingTick =true;
-    @Unique
-    public int createfastschematiccannon$MissingCount = 0;
-
-    @Shadow
-    public SchematicannonBlockEntity.State state;
-
-    @Shadow
-    public int neighbourCheckCooldown;
+public abstract class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements MenuProvider {
 
     public SchematicCannonBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
-    @Shadow
-    public void findInventories() {}
+    @Unique public boolean createfastschematiccannon$MissingTick =true;
+    @Unique public int createfastschematiccannon$MissingCount = 0;
 
-    @Shadow
-    public boolean firstRenderTick;
-
-    @Shadow
-    public BlockPos previousTarget;
-
-    @Shadow
-    public int blocksToPlace;
-
-    @Shadow
-    public SchematicPrinter printer;
-
-    @Shadow
-    protected void tickFlyingBlocks() {}
-
-    @Shadow
-    protected void tickPaperPrinter() {}
-
-    @Shadow
-    public boolean sendUpdate;
-
-    @Shadow
-    private int skipsLeft;
-
-    @Shadow
-    public int blocksPlaced;
-
-    @Shadow
-    private boolean blockSkipped;
-
-    @Shadow
-    public float schematicProgress;
-
-    @Shadow
-    protected void refillFuelIfPossible() {}
-
-    @Shadow
-    protected void tickPrinter() {}
-
-
+    @Shadow public SchematicannonBlockEntity.State state;
+    @Shadow public int neighbourCheckCooldown;
+    @Shadow public abstract void findInventories();
+    @Shadow public boolean firstRenderTick;
+    @Shadow public BlockPos previousTarget;
+    @Shadow public int blocksToPlace;
+    @Shadow public SchematicPrinter printer;
+    @Shadow protected abstract void tickFlyingBlocks();
+    @Shadow protected abstract void tickPaperPrinter();
+    @Shadow public boolean sendUpdate;
+    @Shadow private int skipsLeft;
+    @Shadow public int blocksPlaced;
+    @Shadow private boolean blockSkipped;
+    @Shadow public float schematicProgress;
+    @Shadow protected abstract void refillFuelIfPossible();
+    @Shadow protected abstract void tickPrinter();
 
 
     @Inject(method = "tick" ,at=@At("HEAD" ),cancellable = true,remap = false)
@@ -130,7 +95,6 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
                     neighbourCheckCooldown = NEIGHBOUR_CHECKING;
                     findInventories();
                 }
-
 
                 firstRenderTick = true;
                 previousTarget = printer.getCurrentTarget();
@@ -165,49 +129,13 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
         ci.cancel();
     }
 
-    /**
-     * @author PinkCats
-     * @reason for crush
-     */
-    @Overwrite
-    public void addBehaviours(List<BlockEntityBehaviour> list) {}
 
-    /**
-     * @author PinkCats
-     * @reason for crush
-     */
-    @Overwrite
-    public Component getDisplayName() {
-        return CreateLang.translateDirect("gui.schematicannon.title");
-    }
+    @Shadow public SchematicannonInventory inventory;
+    @Shadow public String statusMsg;
+    @Shadow public int remainingFuel;
+    @Shadow public boolean hasCreativeCrate;
 
-
-    /**
-     * @author PinkCats
-     * @reason for crush
-     */
-    @Overwrite
-    public AbstractContainerMenu createMenu (int id, Inventory inv, Player player) {
-        return SchematicannonMenu.create(id, inv, (SchematicannonBlockEntity) (Object) this);
-    }
-
-
-    @Shadow
-    public SchematicannonInventory inventory;
-
-    @Shadow
-    public String statusMsg;
-
-
-    @Shadow
-    public int remainingFuel;
-
-    @Shadow
-    public boolean hasCreativeCrate;
-
-
-    @Unique
-    private boolean createfastschematiccannon$IsNotLoad = false;
+    @Unique private boolean createfastschematiccannon$IsNotLoad = false;
 
     @Inject(method = "initializePrinter", at = @At("HEAD"), cancellable = true)
     protected void initializePrinterInject(ItemStack blueprint, CallbackInfo ci) {
@@ -285,10 +213,7 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     }
 
 
-
-    @Shadow
-    public void updateChecklist() {}
-
+    @Shadow public abstract void updateChecklist();
 
     @Inject(
             method = "tickPrinter",
@@ -306,7 +231,6 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     }
 
 
-
     @Inject(
             method = "tickPrinter",
             at = @At(
@@ -321,7 +245,6 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
     protected void injectTickPrinterFuelCheck(CallbackInfo info) {
         createfastschematiccannon$MissingTick = true;
     }
-
 
 
     @Inject(
@@ -377,14 +300,10 @@ public class SchematicCannonBlockEntityMixin extends SmartBlockEntity implements
 
 
 
-    @Shadow
-    public int getShotsPerGunpowder() {return 0;}
+    @Shadow public abstract int getShotsPerGunpowder();
+    @Shadow public LinkedHashSet<IItemHandler> attachedInventories;
 
-    @Shadow
-    public LinkedHashSet<IItemHandler> attachedInventories;
-
-    @Unique
-    private static final List<String> createfastschematiccannon$charge;
+    @Unique private static final List<String> createfastschematiccannon$charge;
 
     static {
         createfastschematiccannon$charge = new ArrayList<>();

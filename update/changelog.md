@@ -1,4 +1,5 @@
-
+#### V1.4.1
+1. Fix historic problem from old code.
 
 #### V1.3
 1. fix a refresh problem.
@@ -8,4 +9,5 @@
    (Highly recommand to update, because this bug will occur crash server.)
 
 #### V1.1
-1. Add capability for neoforge.
+1. Add a delay tick for fix cannon delay from Create itself.
+2. Add a blacklist for prevented Create:blaze_burner bug.
